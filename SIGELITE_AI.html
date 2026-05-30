@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>SIGELITE+AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --black:#0b0b0d;
+  --black2:#13131a;
+  --black3:#1c1c26;
+  --orange:#e67e22;
+  --orange2:#f39c12;
+  --gold:#d4af37;
+  --gold2:#f0d060;
+  --text:#f0ece4;
+  --muted:#8a8070;
+  --border:rgba(212,175,55,0.18);
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--black);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
+
+/* ── LAYOUT ── */
+#app{display:flex;height:100dvh;position:relative;}
+
+/* SIDEBAR */
+#sidebar{
+  width:220px;flex-shrink:0;
+  background:var(--black2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  transition:transform .3s ease;
+  z-index:200;
+}
+#sidebar .logo{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.7rem;
+}
+#sidebar .logo .seal{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;
+  color:var(--gold);border:2px solid var(--gold);flex-shrink:0;
+}
+#sidebar .logo .brand{line-height:1.1;}
+#sidebar .logo .brand span:first-child{
+  display:block;font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:1rem;color:var(--gold);letter-spacing:.08em;
+}
+#sidebar .logo .brand span:last-child{
+  font-size:.65rem;color:var(--orange);letter-spacing:.12em;text-transform:uppercase;
+}
+#sidebar nav{flex:1;padding:.5rem 0;}
+#sidebar nav a{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.75rem 1rem;cursor:pointer;
+  font-size:.88rem;color:var(--muted);
+  border-left:3px solid transparent;
+  transition:all .2s;text-decoration:none;
+}
+#sidebar nav a:hover{color:var(--text);background:rgba(212,175,55,.05);}
+#sidebar nav a.active{
+  color:var(--gold);border-left-color:var(--gold);
+  background:rgba(212,175,55,.08);
+}
+#sidebar nav a .ico{font-size:1.1rem;width:20px;text-align:center;}
+#sidebar .sidebar-footer{
+  padding:.75rem 1rem;border-top:1px solid var(--border);
+  font-size:.7rem;color:var(--muted);text-align:center;
+}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{
+  display:none;
+  padding:.75rem 1rem;
+  background:var(--black2);
+  border-bottom:1px solid var(--border);
+  align-items:center;gap:.75rem;
+}
+#hamburger{
+  background:none;border:1px solid var(--border);
+  border-radius:8px;padding:.4rem .5rem;cursor:pointer;color:var(--gold);font-size:1.1rem;
+}
+#topbar .page-title{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:1rem;color:var(--gold);}
+
+#content{flex:1;overflow-y:auto;padding:1.25rem;}
+
+/* OVERLAY */
+#overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;
+}
+
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* DASHBOARD */
+.hero-dash{
+  background:linear-gradient(135deg,var(--black3),#1a1020);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.5rem;margin-bottom:1rem;
+  position:relative;overflow:hidden;
+}
+.hero-dash::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(230,126,34,.15),transparent 70%);
+}
+.hero-dash h1{
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+  font-size:1.6rem;color:var(--gold);letter-spacing:.05em;
+}
+.hero-dash p{font-size:.82rem;color:var(--muted);margin-top:.3rem;}
+.status-pill{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);
+  border-radius:20px;padding:.25rem .75rem;
+  font-size:.72rem;color:#2ecc71;margin-top:.75rem;
+}
+.status-pill::before{content:'●';animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem;}
+.quick-card{
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem .75rem;
+  text-align:center;cursor:pointer;transition:all .2s;
+}
+.quick-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.quick-card .qico{font-size:1.5rem;margin-bottom:.4rem;}
+.quick-card .qlabel{font-size:.72rem;color:var(--muted);}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;}
+.kpi{
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem;
+}
+.kpi .kval{
+  font-family:'Rajdhani',sans-serif;font-size:1.6rem;
+  font-weight:700;color:var(--orange);
+}
+.kpi .klabel{font-size:.72rem;color:var(--muted);margin-top:.2rem;}
+
+/* SECTION TITLE */
+.sec-title{
+  font-family:'Rajdhani',sans-serif;font-weight:600;
+  font-size:1rem;color:var(--gold);
+  margin-bottom:.75rem;letter-spacing:.06em;
+  display:flex;align-items:center;gap:.5rem;
+}
+
+/* INGESTA */
+.upload-zone{
+  border:2px dashed var(--border);border-radius:var(--radius);
+  padding:2rem 1rem;text-align:center;cursor:pointer;
+  transition:all .25s;margin-bottom:1rem;
+  background:var(--black2);position:relative;
+}
+.upload-zone.drag{border-color:var(--gold);background:rgba(212,175,55,.06);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;}
+.upload-zone .uz-ico{font-size:2rem;margin-bottom:.5rem;}
+.upload-zone p{font-size:.82rem;color:var(--muted);}
+.upload-zone .uz-types{
+  font-size:.68rem;color:var(--orange);margin-top:.4rem;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+
+.file-list{margin-bottom:1rem;}
+.file-item{
+  display:flex;align-items:center;gap:.75rem;
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:10px;padding:.65rem .9rem;margin-bottom:.5rem;
+}
+.file-item .ftype{font-size:1.1rem;width:24px;text-align:center;}
+.file-item .finfo{flex:1;min-width:0;}
+.file-item .fname{font-size:.82rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-item .fsize{font-size:.68rem;color:var(--muted);}
+.file-item .fdest{
+  font-size:.68rem;background:rgba(212,175,55,.12);
+  border:1px solid rgba(212,175,55,.25);border-radius:6px;
+  padding:.15rem .5rem;color:var(--gold);white-space:nowrap;
+}
+.file-item .fremove{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:1rem;padding:.1rem .3rem;border-radius:4px;
+  transition:color .15s;
+}
+.file-item .fremove:hover{color:#e74c3c;}
+
+.dest-select{
+  background:var(--black3);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:.4rem .6rem;
+  font-size:.75rem;font-family:'DM Sans',sans-serif;
+  cursor:pointer;outline:none;
+}
+
+/* BOTONES */
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.7rem 1.2rem;border-radius:10px;border:none;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-size:.85rem;font-weight:500;transition:all .2s;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  color:#fff;
+}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-gold{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--black);
+}
+.btn-gold:hover{filter:brightness(1.1);}
+.btn-outline{
+  background:transparent;border:1px solid var(--border);
+  color:var(--muted);
+}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.75rem;}
+
+/* PREVIEW TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:1rem;}
+table{width:100%;border-collapse:collapse;font-size:.78rem;}
+th{background:var(--black3);color:var(--gold);padding:.6rem .8rem;text-align:left;white-space:nowrap;}
+td{padding:.55rem .8rem;border-top:1px solid rgba(212,175,55,.08);color:var(--text);}
+tr:hover td{background:rgba(212,175,55,.03);}
+
+/* REPORTES */
+.report-item{
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem;margin-bottom:.75rem;
+}
+.report-item .rtop{display:flex;align-items:flex-start;gap:.75rem;}
+.report-item .rico{font-size:1.4rem;}
+.report-item .rinfo{flex:1;}
+.report-item .rname{font-size:.88rem;color:var(--text);font-weight:500;}
+.report-item .rmeta{font-size:.7rem;color:var(--muted);margin-top:.15rem;}
+.report-item .rbtns{display:flex;gap:.4rem;margin-top:.75rem;flex-wrap:wrap;}
+.rbtn{
+  font-size:.7rem;padding:.3rem .7rem;border-radius:6px;
+  border:1px solid var(--border);background:var(--black3);
+  color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.rbtn:hover{border-color:var(--orange);color:var(--orange);}
+
+.filter-row{display:flex;gap:.6rem;margin-bottom:1rem;align-items:center;flex-wrap:wrap;}
+.filter-row label{font-size:.75rem;color:var(--muted);}
+.filter-row input[type=date]{
+  background:var(--black2);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:.4rem .6rem;
+  font-size:.75rem;font-family:'DM Sans',sans-serif;outline:none;
+}
+
+/* ZIP + EMAIL */
+.zip-panel{
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;
+}
+.zip-panel h3{
+  font-family:'Rajdhani',sans-serif;font-size:1rem;
+  color:var(--gold);margin-bottom:.75rem;
+}
+.email-dest{
+  display:flex;align-items:center;gap:.5rem;
+  background:var(--black3);border:1px solid rgba(39,174,96,.3);
+  border-radius:8px;padding:.6rem .9rem;margin-bottom:.75rem;
+}
+.email-dest .eico{color:#2ecc71;}
+.email-dest .eaddr{font-size:.78rem;color:var(--text);}
+
+/* CONFIGURACION */
+.config-section{
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;
+}
+.config-section h3{
+  font-family:'Rajdhani',sans-serif;font-size:1rem;
+  color:var(--gold);margin-bottom:.9rem;
+}
+.field{margin-bottom:.75rem;}
+.field label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:.3rem;}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--black3);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:.6rem .8rem;
+  font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none;
+  transition:border-color .2s;
+}
+.field input:focus,.field textarea:focus{border-color:var(--gold);}
+
+/* IA FLOTANTE */
+#fab{
+  position:fixed;bottom:1.25rem;right:1.25rem;
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),var(--gold));
+  border:none;cursor:pointer;z-index:300;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;box-shadow:0 4px 20px rgba(230,126,34,.4);
+  transition:transform .2s;
+}
+#fab:hover{transform:scale(1.08);}
+#fab .badge{
+  position:absolute;top:-2px;right:-2px;
+  width:16px;height:16px;border-radius:50%;
+  background:#2ecc71;border:2px solid var(--black);
+  font-size:.55rem;display:flex;align-items:center;justify-content:center;
+  color:var(--black);font-weight:700;
+}
+
+#ia-panel{
+  position:fixed;bottom:5rem;right:1rem;
+  width:min(340px,calc(100vw - 2rem));
+  max-height:65vh;
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);
+  display:none;flex-direction:column;z-index:290;
+  overflow:hidden;
+}
+#ia-panel.open{display:flex;}
+#ia-header{
+  padding:.85rem 1rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.6rem;
+  background:var(--black3);
+}
+#ia-header .ia-dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;animation:pulse 2s infinite;}
+#ia-header span{font-family:'Rajdhani',sans-serif;font-weight:600;color:var(--gold);font-size:.95rem;flex:1;}
+#ia-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;}
+#ia-messages{flex:1;overflow-y:auto;padding:.85rem;display:flex;flex-direction:column;gap:.6rem;}
+.msg{max-width:88%;padding:.6rem .85rem;border-radius:12px;font-size:.8rem;line-height:1.5;}
+.msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;border-radius:12px 12px 2px 12px;}
+.msg.ai{align-self:flex-start;background:var(--black3);border:1px solid var(--border);color:var(--text);border-radius:12px 12px 12px 2px;}
+.msg.ai.loading::after{content:'●●●';animation:dots 1s infinite;}
+@keyframes dots{0%{opacity:.3;}50%{opacity:1;}100%{opacity:.3;}}
+#ia-input-row{
+  padding:.75rem;border-top:1px solid var(--border);
+  display:flex;gap:.5rem;
+}
+#ia-input{
+  flex:1;background:var(--black3);border:1px solid var(--border);
+  color:var(--text);border-radius:10px;padding:.55rem .75rem;
+  font-size:.8rem;font-family:'DM Sans',sans-serif;outline:none;resize:none;
+  max-height:80px;
+}
+#ia-send{
+  background:linear-gradient(135deg,var(--orange),var(--gold));
+  border:none;border-radius:10px;padding:.55rem .75rem;
+  cursor:pointer;color:#fff;font-size:1rem;
+}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--black3);border:1px solid var(--border);
+  border-radius:10px;padding:.65rem 1.25rem;font-size:.8rem;
+  color:var(--text);opacity:0;transition:all .3s;z-index:400;white-space:nowrap;
+  pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.success{border-color:#2ecc71;color:#2ecc71;}
+#toast.error{border-color:#e74c3c;color:#e74c3c;}
+
+/* MODAL */
+#modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+  z-index:500;align-items:center;justify-content:center;padding:1rem;
+}
+#modal-overlay.open{display:flex;}
+#modal{
+  background:var(--black2);border:1px solid var(--border);
+  border-radius:18px;padding:1.5rem;width:100%;max-width:400px;
+}
+#modal h3{font-family:'Rajdhani',sans-serif;color:var(--gold);margin-bottom:.75rem;font-size:1.1rem;}
+#modal p{font-size:.82rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.6;}
+#modal .mbtns{display:flex;gap:.6rem;justify-content:flex-end;}
+
+/* PROGRESS */
+.progress-bar{background:var(--black3);border-radius:6px;height:6px;margin:.5rem 0;overflow:hidden;}
+.progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--orange),var(--gold));transition:width .3s;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(212,175,55,.25);border-radius:4px;}
+
+/* MOBILE */
+@media(max-width:640px){
+  #sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);}
+  #sidebar.open{transform:translateX(0);}
+  #topbar{display:flex;}
+  #main{width:100%;}
+  .quick-grid{grid-template-columns:repeat(3,1fr);}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="logo">
+    <div class="seal">SIG</div>
+    <div class="brand">
+      <span>SIGELITE</span>
+      <span>+IA · v2.0</span>
+    </div>
+  </div>
+  <nav>
+    <a class="active" onclick="nav('dashboard')" id="nav-dashboard"><span class="ico">⊞</span> Dashboard</a>
+    <a onclick="nav('ingesta')" id="nav-ingesta"><span class="ico">↑</span> Ingesta</a>
+    <a onclick="nav('reportes')" id="nav-reportes"><span class="ico">📋</span> Reportes</a>
+    <a onclick="nav('envio')" id="nav-envio"><span class="ico">📦</span> ZIP &amp; Envío</a>
+    <a onclick="nav('config')" id="nav-config"><span class="ico">⚙</span> Configuración</a>
+  </nav>
+  <div class="sidebar-footer">Verbum Tech Solution © 2026</div>
+</div>
+
+<!-- OVERLAY MÓVIL -->
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <button id="hamburger" onclick="toggleSidebar()">☰</button>
+    <span class="page-title" id="topbar-title">Dashboard</span>
+  </div>
+  <div id="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="hero-dash">
+        <h1>SIGELITE+AI</h1>
+        <p>Sistema de gestión operativa con inteligencia artificial</p>
+        <div class="status-pill">Sistema Operativo</div>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card" onclick="nav('ingesta')">
+          <div class="qico">↑</div>
+          <div class="qlabel">Ingesta</div>
+        </div>
+        <div class="quick-card" onclick="toggleIA()">
+          <div class="qico">🤖</div>
+          <div class="qlabel">Asistente IA</div>
+        </div>
+        <div class="quick-card" onclick="nav('reportes')">
+          <div class="qico">📋</div>
+          <div class="qlabel">Reportes</div>
+        </div>
+        <div class="quick-card" onclick="nav('envio')">
+          <div class="qico">📦</div>
+          <div class="qlabel">ZIP &amp; Email</div>
+        </div>
+        <div class="quick-card" onclick="nav('config')">
+          <div class="qico">⚙</div>
+          <div class="qlabel">Config</div>
+        </div>
+        <div class="quick-card" onclick="showModal('info')">
+          <div class="qico">ℹ</div>
+          <div class="qlabel">Acerca de</div>
+        </div>
+      </div>
+      <div class="sec-title">▸ KPIs del sistema</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kval" id="kpi-files">0</div><div class="klabel">Archivos cargados</div></div>
+        <div class="kpi"><div class="kval" id="kpi-reports">0</div><div class="klabel">Reportes generados</div></div>
+        <div class="kpi"><div class="kval" id="kpi-zips">0</div><div class="klabel">ZIPs exportados</div></div>
+        <div class="kpi"><div class="kval" id="kpi-emails">0</div><div class="klabel">Envíos preparados</div></div>
+      </div>
+    </div>
+
+    <!-- INGESTA -->
+    <div class="page" id="page-ingesta">
+      <div class="sec-title">↑ Ingesta de archivos</div>
+      <div class="upload-zone" id="dropzone">
+        <input type="file" id="file-input" multiple
+          accept=".csv,.xlsx,.xls,.docx,.doc,.pdf,.jpg,.jpeg,.png,.gif,.webp,.txt,.md,.zip"/>
+        <div class="uz-ico">📂</div>
+        <p>Arrastra archivos aquí o toca para seleccionar</p>
+        <div class="uz-types">CSV · Excel · Word · PDF · Imágenes · TXT · ZIP</div>
+      </div>
+
+      <div id="file-list-wrap" style="display:none">
+        <div class="sec-title">▸ Archivos seleccionados</div>
+        <div class="file-list" id="file-list"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="confirmarIngesta()">✓ Confirmar ingesta</button>
+          <button class="btn btn-outline" onclick="clearFiles()">✕ Limpiar</button>
+        </div>
+      </div>
+
+      <div id="preview-wrap" style="display:none;margin-top:1rem;">
+        <div class="sec-title">▸ Vista previa</div>
+        <div class="table-wrap"><table id="preview-table"></table></div>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div class="page" id="page-reportes">
+      <div class="sec-title">📋 Reportes generados</div>
+      <div class="filter-row">
+        <label>Desde</label>
+        <input type="date" id="f-desde"/>
+        <label>Hasta</label>
+        <input type="date" id="f-hasta"/>
+        <button class="btn btn-outline" style="padding:.4rem .8rem;font-size:.75rem" onclick="filtrarReportes()">Filtrar</button>
+      </div>
+      <div id="reportes-list">
+        <p style="color:var(--muted);font-size:.82rem;text-align:center;padding:2rem 0;">
+          Aún no hay reportes. Carga archivos en la sección de Ingesta.
+        </p>
+      </div>
+    </div>
+
+    <!-- ZIP & ENVÍO -->
+    <div class="page" id="page-envio">
+      <div class="sec-title">📦 Exportar ZIP y enviar</div>
+
+      <div class="zip-panel">
+        <h3>Destino de envío</h3>
+        <div class="email-dest">
+          <span class="eico">✉</span>
+          <span class="eaddr">ome2306@onei.gob.cu</span>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem;">
+          Todos los archivos ingestados y reportes generados se empaquetarán en un único archivo ZIP.
+        </p>
+        <div id="zip-file-count" style="font-size:.8rem;color:var(--text);margin-bottom:.75rem;"></div>
+        <div class="progress-bar" id="zip-progress-bar" style="display:none">
+          <div class="progress-fill" id="zip-progress-fill" style="width:0%"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gold" onclick="generarZIP()">📦 Generar y descargar ZIP</button>
+          <button class="btn btn-primary" onclick="prepararEmail()">✉ Preparar email</button>
+        </div>
+      </div>
+
+      <div class="zip-panel" id="email-panel" style="display:none">
+        <h3>Email listo para enviar</h3>
+        <div class="field">
+          <label>Para</label>
+          <input type="text" value="ome2306@onei.gob.cu" readonly/>
+        </div>
+        <div class="field">
+          <label>Asunto</label>
+          <input type="text" id="email-subject" value="Envío de documentos — SIGELITE+AI"/>
+        </div>
+        <div class="field">
+          <label>Cuerpo del mensaje</label>
+          <textarea id="email-body" rows="4">Estimado/a,
+
+Adjunto encontrará el archivo ZIP con los documentos generados por el sistema SIGELITE+AI.
+
+Saludos,
+Armando Omar Bermúdez Vila
+Verbum Tech Solution</textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="abrirMailto()">✉ Abrir en cliente de correo</button>
+          <button class="btn btn-outline" onclick="copiarEmail()">⎘ Copiar dirección</button>
+        </div>
+        <p style="font-size:.7rem;color:var(--muted);margin-top:.75rem;">
+          ⚠ Descarga primero el ZIP, luego adjúntalo manualmente en tu cliente de correo.
+        </p>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="page" id="page-config">
+      <div class="sec-title">⚙ Configuración</div>
+      <div class="config-section">
+        <h3>Perfil de usuario</h3>
+        <div class="field"><label>Nombre</label><input type="text" value="Armando Omar Bermúdez Vila"/></div>
+        <div class="field"><label>Empresa</label><input type="text" value="Verbum Tech Solution"/></div>
+        <div class="field"><label>WhatsApp</label><input type="text" value="+53 59671678"/></div>
+        <div class="field"><label>Correo de envío destino</label><input type="text" value="ome2306@onei.gob.cu" readonly/></div>
+      </div>
+      <div class="config-section">
+        <h3>Cuentas / carpetas de destino</h3>
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem;">
+          Define las categorías donde se distribuyen los archivos al ingestarlos.
+        </p>
+        <div id="cuentas-list"></div>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="agregarCuenta()">+ Agregar cuenta</button>
+          <button class="btn btn-primary" onclick="guardarConfig()">✓ Guardar</button>
+        </div>
+      </div>
+      <div class="config-section">
+        <h3>Sistema</h3>
+        <div class="field"><label>Versión</label><input type="text" value="SIGELITE+AI v2.0" readonly/></div>
+        <div class="field"><label>Tecnología</label><input type="text" value="HTML5 · Offline-first · JSZip" readonly/></div>
+        <button class="btn btn-outline" style="margin-top:.25rem" onclick="limpiarTodo()">🗑 Limpiar todos los datos</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- FAB IA -->
+<button id="fab" onclick="toggleIA()">🤖<span class="badge">AI</span></button>
+
+<!-- IA PANEL -->
+<div id="ia-panel">
+  <div id="ia-header">
+    <span class="ia-dot"></span>
+    <span>Asistente SIGELITE·IA</span>
+    <button id="ia-close" onclick="toggleIA()">✕</button>
+  </div>
+  <div id="ia-messages">
+    <div class="msg ai">Hola, soy tu asistente IA de SIGELITE. Puedo ayudarte a gestionar archivos, analizar datos y responder preguntas sobre el sistema. ¿En qué te ayudo?</div>
+  </div>
+  <div id="ia-input-row">
+    <textarea id="ia-input" placeholder="Escribe tu consulta..." rows="1"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendIA();}"></textarea>
+    <button id="ia-send" onclick="sendIA()">➤</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-body"></p>
+    <div class="mbtns" id="modal-btns"></div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+const S = {
+  files: [],          // {file, name, size, type, dest, data(base64)}
+  reports: [],        // {id, name, date, type, content}
+  cuentas: ['Contabilidad','Operaciones','RRHH','Proyectos','General'],
+  kpis: {files:0, reports:0, zips:0, emails:0},
+  iaHistory: []
+};
+
+// ── NAV ──
+function nav(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#sidebar nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+  document.getElementById('topbar-title').textContent =
+    {dashboard:'Dashboard',ingesta:'Ingesta',reportes:'Reportes',
+     envio:'ZIP & Envío',config:'Configuración'}[page];
+  closeSidebar();
+  if(page==='reportes') renderReportes();
+  if(page==='envio') renderZipCount();
+  if(page==='config') renderCuentas();
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').style.display =
+    document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').style.display='none';
+}
+
+// ── FILE ICONS ──
+function fileIcon(name){
+  const ext=name.split('.').pop().toLowerCase();
+  if(['jpg','jpeg','png','gif','webp'].includes(ext)) return '🖼';
+  if(['pdf'].includes(ext)) return '📄';
+  if(['xlsx','xls'].includes(ext)) return '📊';
+  if(['docx','doc'].includes(ext)) return '📝';
+  if(['csv'].includes(ext)) return '📋';
+  if(['zip'].includes(ext)) return '📦';
+  if(['txt','md'].includes(ext)) return '📃';
+  return '📁';
+}
+function fileSize(bytes){
+  if(bytes<1024) return bytes+'B';
+  if(bytes<1048576) return (bytes/1024).toFixed(1)+'KB';
+  return (bytes/1048576).toFixed(1)+'MB';
+}
+function guessDest(name){
+  const n=name.toLowerCase();
+  if(/contab|finance|factura|pago|cuenta/.test(n)) return 'Contabilidad';
+  if(/opera|proceso|produc|logis/.test(n)) return 'Operaciones';
+  if(/rrhh|personal|emplead|nomina/.test(n)) return 'RRHH';
+  if(/proyect|plan|propuesta/.test(n)) return 'Proyectos';
+  return 'General';
+}
+
+// ── DROPZONE ──
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+});
+document.getElementById('file-input').addEventListener('change',e=>{
+  handleFiles(e.target.files);
+  e.target.value='';
+});
+
+function handleFiles(fileList){
+  Array.from(fileList).forEach(f=>{
+    if(S.files.find(x=>x.name===f.name)) return;
+    const entry={file:f,name:f.name,size:f.size,type:f.type,dest:guessDest(f.name),data:null};
+    S.files.push(entry);
+    readFileData(entry);
+  });
+  renderFileList();
+}
+
+function readFileData(entry){
+  const reader=new FileReader();
+  reader.onload=e=>{ entry.data=e.target.result; };
+  reader.readAsDataURL(entry.file);
+}
+
+function renderFileList(){
+  const wrap=document.getElementById('file-list-wrap');
+  const list=document.getElementById('file-list');
+  if(!S.files.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  list.innerHTML=S.files.map((f,i)=>`
+    <div class="file-item">
+      <span class="ftype">${fileIcon(f.name)}</span>
+      <div class="finfo">
+        <div class="fname">${f.name}</div>
+        <div class="fsize">${fileSize(f.size)}</div>
+      </div>
+      <select class="dest-select" onchange="S.files[${i}].dest=this.value">
+        ${S.cuentas.map(c=>`<option value="${c}"${c===f.dest?' selected':''}>${c}</option>`).join('')}
+      </select>
+      <button class="fremove" onclick="removeFile(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeFile(i){
+  S.files.splice(i,1);
+  renderFileList();
+  if(!S.files.length){
+    document.getElementById('preview-wrap').style.display='none';
+  }
+}
+function clearFiles(){
+  S.files=[];renderFileList();
+  document.getElementById('preview-wrap').style.display='none';
+}
+
+// ── CONFIRMAR INGESTA ──
+function confirmarIngesta(){
+  if(!S.files.length){toast('No hay archivos seleccionados','error');return;}
+  // Preview CSV/TXT si hay uno
+  const csvFile=S.files.find(f=>/\.(csv|txt)$/i.test(f.name));
+  if(csvFile){
+    parseCSVPreview(csvFile.file);
+  }
+  // Generar reporte por cada archivo
+  S.files.forEach(f=>{
+    S.reports.push({
+      id:Date.now()+Math.random(),
+      name:`Ingesta: ${f.name}`,
+      date:new Date().toISOString().slice(0,10),
+      cuenta:f.dest,
+      type:f.name.split('.').pop().toUpperCase(),
+      size:f.size,
+      file:f
+    });
+  });
+  S.kpis.files+=S.files.length;
+  S.kpis.reports+=S.files.length;
+  updateKPIs();
+  toast(`✓ ${S.files.length} archivo(s) ingestado(s) correctamente`,'success');
+}
+
+function parseCSVPreview(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const lines=e.target.result.split('\n').slice(0,6).filter(l=>l.trim());
+    if(!lines.length) return;
+    const rows=lines.map(l=>l.split(/[,;\t]/));
+    const maxCols=Math.max(...rows.map(r=>r.length));
+    let html=`<tr>${rows[0].map(c=>`<th>${c.trim()}</th>`).join('')}</tr>`;
+    rows.slice(1).forEach(r=>{
+      html+=`<tr>${r.map(c=>`<td>${(c||'').trim()}</td>`).join('')}</tr>`;
+    });
+    document.getElementById('preview-table').innerHTML=html;
+    document.getElementById('preview-wrap').style.display='block';
+  };
+  reader.readAsText(file);
+}
+
+// ── REPORTES ──
+function renderReportes(){
+  const list=document.getElementById('reportes-list');
+  const desde=document.getElementById('f-desde').value;
+  const hasta=document.getElementById('f-hasta').value;
+  let filtered=S.reports;
+  if(desde) filtered=filtered.filter(r=>r.date>=desde);
+  if(hasta) filtered=filtered.filter(r=>r.date<=hasta);
+  if(!filtered.length){
+    list.innerHTML='<p style="color:var(--muted);font-size:.82rem;text-align:center;padding:2rem 0;">No hay reportes en ese rango.</p>';
+    return;
+  }
+  list.innerHTML=filtered.map(r=>`
+    <div class="report-item">
+      <div class="rtop">
+        <span class="rico">${fileIcon(r.name)}</span>
+        <div class="rinfo">
+          <div class="rname">${r.name}</div>
+          <div class="rmeta">${r.date} · ${r.cuenta} · ${fileSize(r.size||0)} · ${r.type}</div>
+        </div>
+      </div>
+      <div class="rbtns">
+        <button class="rbtn" onclick="descargarReporte('${r.id}','original')">⬇ Original</button>
+        <button class="rbtn" onclick="descargarReporte('${r.id}','txt')">📄 TXT</button>
+        <button class="rbtn" onclick="descargarReporte('${r.id}','zip')">📦 ZIP</button>
+      </div>
+    </div>`).join('');
+}
+function filtrarReportes(){ renderReportes(); }
+
+function descargarReporte(id, fmt){
+  const r=S.reports.find(x=>String(x.id)===String(id));
+  if(!r){ toast('Reporte no encontrado','error'); return; }
+  if(fmt==='original' && r.file && r.file.data){
+    const a=document.createElement('a');
+    a.href=r.file.data;
+    a.download=r.file.name;
+    a.click();
+    toast('Descargando archivo original...','success');
+  } else if(fmt==='txt'){
+    const blob=new Blob([`Reporte: ${r.name}\nFecha: ${r.date}\nCuenta: ${r.cuenta}\nTipo: ${r.type}\n`],{type:'text/plain'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`reporte_${r.name.replace(/[^a-z0-9]/gi,'_')}.txt`;
+    a.click();
+    toast('Descargando TXT...','success');
+  } else if(fmt==='zip'){
+    const zip=new JSZip();
+    if(r.file && r.file.data){
+      const base64=r.file.data.split(',')[1];
+      zip.file(r.file.name, base64, {base64:true});
+    }
+    zip.file('reporte.txt',`Reporte: ${r.name}\nFecha: ${r.date}\nCuenta: ${r.cuenta}\n`);
+    zip.generateAsync({type:'blob'}).then(blob=>{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=`reporte_${r.name.replace(/[^a-z0-9]/gi,'_')}.zip`;
+      a.click();
+      toast('ZIP descargado','success');
+    });
+  }
+}
+
+// ── ZIP & ENVÍO ──
+function renderZipCount(){
+  const el=document.getElementById('zip-file-count');
+  const total=S.files.length+S.reports.length;
+  el.textContent=`📁 ${S.files.length} archivos cargados · 📋 ${S.reports.length} reportes · Total: ${total} elementos`;
+}
+
+function generarZIP(){
+  if(!S.files.length && !S.reports.length){
+    toast('No hay archivos para empaquetar','error'); return;
+  }
+  const zip=new JSZip();
+  const bar=document.getElementById('zip-progress-bar');
+  const fill=document.getElementById('zip-progress-fill');
+  bar.style.display='block'; fill.style.width='10%';
+
+  // Organizar por cuentas
+  const cuentaMap={};
+  S.files.forEach(f=>{
+    if(!cuentaMap[f.dest]) cuentaMap[f.dest]=[];
+    cuentaMap[f.dest].push(f);
+  });
+  Object.entries(cuentaMap).forEach(([cuenta,files])=>{
+    files.forEach(f=>{
+      if(f.data){
+        const base64=f.data.split(',')[1];
+        zip.file(`${cuenta}/${f.name}`,base64,{base64:true});
+      }
+    });
+  });
+
+  // Agregar TXT índice
+  let indice=`SIGELITE+AI — Índice de archivos\nFecha: ${new Date().toLocaleString()}\n\n`;
+  S.files.forEach(f=>{ indice+=`[${f.dest}] ${f.name} (${fileSize(f.size)})\n`; });
+  zip.file('_INDICE.txt', indice);
+
+  fill.style.width='60%';
+  zip.generateAsync({type:'blob'}).then(blob=>{
+    fill.style.width='100%';
+    setTimeout(()=>bar.style.display='none',800);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    const fecha=new Date().toISOString().slice(0,10).replace(/-/g,'');
+    a.download=`SIGELITE_${fecha}.zip`;
+    a.click();
+    S.kpis.zips++;
+    updateKPIs();
+    toast('ZIP generado y descargado','success');
+  });
+}
+
+function prepararEmail(){
+  document.getElementById('email-panel').style.display='block';
+  S.kpis.emails++;
+  updateKPIs();
+  document.getElementById('email-panel').scrollIntoView({behavior:'smooth'});
+}
+function abrirMailto(){
+  const subj=encodeURIComponent(document.getElementById('email-subject').value);
+  const body=encodeURIComponent(document.getElementById('email-body').value);
+  window.location.href=`mailto:ome2306@onei.gob.cu?subject=${subj}&body=${body}`;
+  toast('Abriendo cliente de correo...','success');
+}
+function copiarEmail(){
+  navigator.clipboard?.writeText('ome2306@onei.gob.cu').then(()=>{
+    toast('Dirección copiada','success');
+  }).catch(()=>{
+    toast('ome2306@onei.gob.cu','success');
+  });
+}
+
+// ── CONFIG ──
+function renderCuentas(){
+  const el=document.getElementById('cuentas-list');
+  el.innerHTML=S.cuentas.map((c,i)=>`
+    <div style="display:flex;gap:.5rem;margin-bottom:.5rem;align-items:center">
+      <input type="text" value="${c}" style="flex:1;background:var(--black3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:.45rem .7rem;font-size:.8rem;font-family:'DM Sans',sans-serif;outline:none;"
+        onchange="S.cuentas[${i}]=this.value"/>
+      <button onclick="S.cuentas.splice(${i},1);renderCuentas();"
+        style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:.4rem .6rem;cursor:pointer;">✕</button>
+    </div>`).join('');
+}
+function agregarCuenta(){
+  S.cuentas.push('Nueva cuenta');
+  renderCuentas();
+}
+function guardarConfig(){
+  toast('Configuración guardada','success');
+}
+function limpiarTodo(){
+  showModal('confirm','¿Limpiar todo?',
+    'Se eliminarán todos los archivos, reportes y datos de sesión. Esta acción no se puede deshacer.',
+    ()=>{ S.files=[];S.reports=[];S.kpis={files:0,reports:0,zips:0,emails:0};
+      updateKPIs();clearFiles();toast('Datos eliminados','success');closeModal(); });
+}
+
+// ── KPIs ──
+function updateKPIs(){
+  document.getElementById('kpi-files').textContent=S.kpis.files;
+  document.getElementById('kpi-reports').textContent=S.kpis.reports;
+  document.getElementById('kpi-zips').textContent=S.kpis.zips;
+  document.getElementById('kpi-emails').textContent=S.kpis.emails;
+}
+
+// ── IA ──
+function toggleIA(){
+  const p=document.getElementById('ia-panel');
+  p.classList.toggle('open');
+}
+async function sendIA(){
+  const inp=document.getElementById('ia-input');
+  const msg=inp.value.trim();
+  if(!msg) return;
+  inp.value='';
+  addMsg(msg,'user');
+  const loading=addMsg('','ai loading');
+  S.iaHistory.push({role:'user',content:msg});
+  try{
+    const systemPrompt=`Eres el asistente IA de SIGELITE+AI, sistema de gestión operativa de Verbum Tech Solution. 
+Ayudas a gestionar archivos, cuentas, reportes y envíos. 
+El sistema tiene ${S.files.length} archivos cargados y ${S.reports.length} reportes.
+Las cuentas disponibles son: ${S.cuentas.join(', ')}.
+Responde en español, de forma concisa y útil. Máximo 3-4 oraciones.`;
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:systemPrompt,
+        messages:S.iaHistory.slice(-10)
+      })
+    });
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('')||'Sin respuesta.';
+    loading.classList.remove('loading');
+    loading.textContent=text;
+    S.iaHistory.push({role:'assistant',content:text});
+  } catch(e){
+    loading.classList.remove('loading');
+    loading.textContent='Error de conexión. Verifica internet e inténtalo de nuevo.';
+  }
+  document.getElementById('ia-messages').scrollTop=9999;
+}
+function addMsg(text, cls){
+  const div=document.createElement('div');
+  div.className='msg '+cls;
+  div.textContent=text;
+  document.getElementById('ia-messages').appendChild(div);
+  document.getElementById('ia-messages').scrollTop=9999;
+  return div;
+}
+
+// ── TOAST ──
+let toastTimer;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='show '+(type||'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.className='',2800);
+}
+
+// ── MODAL ──
+function showModal(type,title,body,onConfirm){
+  document.getElementById('modal-title').textContent=title||'SIGELITE+AI';
+  document.getElementById('modal-body').textContent=body||
+    'Sistema de gestión operativa con IA integrada.\nVerbum Tech Solution · 2026\nArmando Omar Bermúdez Vila';
+  const btns=document.getElementById('modal-btns');
+  if(type==='confirm'){
+    btns.innerHTML=`<button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="(${onConfirm.toString()})()">Confirmar</button>`;
+  } else {
+    btns.innerHTML=`<button class="btn btn-primary" onclick="closeModal()">Cerrar</button>`;
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
+document.getElementById('modal-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+});
+
+// ── INIT ──
+renderCuentas();
+updateKPIs();
+</script>
+</body>
+</html>
